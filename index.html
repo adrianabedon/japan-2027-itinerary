@@ -65,7 +65,7 @@ function renderCalendar(){
    const trip=tripDateFor(x[1]);
    const hasTripDate=/\\bfeb(?:ruary)?\\s+\\d+/i.test(x[1]);
    const suffix=trip&&!hasTripDate?' — for '+trip:'';
-   return x[1]+suffix+' (calendar task: '+due+')';
+   return x[1]+suffix;
  };
  const makeEvent=x=>'<button class="cal-event'+(x[3]==='done'?' done':'')+'" data-cat="'+escapeHtml(x[2])+'"><span class="cal-task-marker" aria-hidden="true">'+(x[3]==='done'?'✓':'■')+'</span><span class="cal-task-text">'+escapeHtml(taskLabel(x))+'</span></button>';
  const renderGroups=(items,agenda=false)=>{
