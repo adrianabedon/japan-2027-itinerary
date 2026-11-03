@@ -25,24 +25,22 @@ function renderCalendar(){
     let style=items.some(x=>x[3]==='deadline')?' deadline':items.some(x=>x[3]==='travel')?' travel':items.length?' action':'';
     const groupName=x=>{
       const label=x[1].toLowerCase(),cat=x[2];
+      // Reply-checks belong together regardless of which itinerary category owns them.
+      if(/follow up|follow-up|await|reply|response|unanswered|check.*reply|confirm mik whatsapp|email.*response/.test(label))return 'Email Replies';
       if(cat==='activities')return 'Activities';
-      if(cat==='ski')return 'Skiing';
-      if(cat==='flights')return 'Flights';
-      if(cat==='trains')return 'Train Tickets';
-      if(cat==='insurance')return 'Insurance';
-      if(cat==='hotels')return 'Hotels';
       if(cat==='transport'){
         if(/taxi|transfer|driver|car quote|car booking|pickup|mik|fuji|shuttle/.test(label)&&!/station taxis|walk|ordinary taxi|regular taxi|taxi hnd|taxi for aikido/.test(label))return 'Private Transfers';
         return 'Local Transportation';
       }
-      if(cat==='people'){
-        if(/ski|rental|rusutsu|niseko/.test(label))return 'Skiing';
-        return 'Other Tasks';
-      }
+      if(cat==='ski'||(cat==='people'&&/ski|rental|rusutsu|niseko/.test(label)))return 'Skiing';
+      if(cat==='flights')return 'Flights';
+      if(cat==='trains')return 'Train Tickets';
+      if(cat==='insurance')return 'Insurance';
+      if(cat==='hotels')return 'Hotels';
       if(cat==='days')return 'Travel Days';
       return 'Other Tasks';
     };
-    const groupOrder=['Private Transfers','Activities','Flights','Train Tickets','Skiing','Hotels','Insurance','Local Transportation','Travel Days','Other Tasks'];
+    const groupOrder=['Private Transfers','Activities','Email Replies','Flights','Train Tickets','Skiing','Hotels','Insurance','Local Transportation','Travel Days','Other Tasks'];
     const makeEvent=x=>'<button class="cal-event'+(x[3]==='done'?' done':'')+'" data-cat="'+escapeHtml(x[2])+'">'+(x[3]==='done'?'✓ ':'')+escapeHtml(x[1])+'</button>';
     const pending=items.filter(x=>x[3]!=='done');
     const completed=items.filter(x=>x[3]==='done');
