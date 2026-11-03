@@ -61,9 +61,8 @@ function renderCalendar(){
    return '';
  };
  const taskLabel=x=>{
-   const due=new Date(x[0]+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
    const trip=tripDateFor(x[1]);
-   const hasTripDate=/\\bfeb(?:ruary)?\\s+\\d+/i.test(x[1]);
+   const hasTripDate=/\bfeb(?:ruary)?\s+\d+(?:st|nd|rd|th)?\b/i.test(x[1]);
    const suffix=trip&&!hasTripDate?' — for '+trip:'';
    return x[1]+suffix;
  };
