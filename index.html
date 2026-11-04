@@ -83,11 +83,22 @@ function renderCalendar(){
    return x[1]+suffix;
  };
  const makeEvent=x=>'<button type="button" class="cal-event task-detail-link'+(x[3]==='done'?' done':'')+'" data-cat="'+escapeHtml(x[2])+'" data-label="'+escapeHtml(x[1])+'" title="Open related itinerary details"><span class="cal-task-marker" aria-hidden="true">'+(x[3]==='done'?'✓':'■')+'</span><span class="cal-task-text">'+escapeHtml(taskLabel(x))+' <span aria-hidden="true">↗</span></span></button>';
+ const activityDate=x=>{
+   const label=x[1];
+   const match=label.match(/\bFeb(?:ruary)?\s+(\d{1,2})\b/i);
+   if(match)return Number(match[1]);
+   const inferred=tripDateFor(label).match(/Feb\s+(\d{1,2})/i);
+   return inferred?Number(inferred[1]):99;
+ };
+ const sortWithinGroup=(a,b)=>activityDate(a)-activityDate(b)||a[0].localeCompare(b[0])||a[1].localeCompare(b[1]);
  const renderGroups=(items,agenda=false)=>{
    const pending=items.filter(x=>x[3]!=='done');
    const completed=items.filter(x=>x[3]==='done');
-   let tags=pending.map(makeEvent).join('');
-   if(completed.length)tags+='<div class="cal-done-label">Completed</div>'+completed.map(makeEvent).join('');
+   let tags=groupOrder.map(group=>{
+     const entries=pending.filter(x=>groupName(x)===group).sort(sortWithinGroup);
+     return entries.length?'<div class="cal-group-label">'+group+'</div>'+entries.map(makeEvent).join(''):'';
+   }).join('');
+   if(completed.length)tags+='<div class="cal-done-label">Completed</div>'+completed.sort(sortWithinGroup).map(makeEvent).join('');
    return tags;
  };
  const actionDates=[...new Set(CAL_EVENTS.map(x=>x[0]))].sort();
