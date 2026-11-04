@@ -86,10 +86,7 @@ function renderCalendar(){
  const renderGroups=(items,agenda=false)=>{
    const pending=items.filter(x=>x[3]!=='done');
    const completed=items.filter(x=>x[3]==='done');
-   let tags=groupOrder.map(group=>{
-     const entries=pending.filter(x=>groupName(x)===group);
-     return entries.length?'<div class="cal-group-label">'+group+'</div>'+entries.map(makeEvent).join(''):'';
-   }).join('');
+   let tags=pending.map(makeEvent).join('');
    if(completed.length)tags+='<div class="cal-done-label">Completed</div>'+completed.map(makeEvent).join('');
    return tags;
  };
@@ -145,13 +142,12 @@ function openTaskDetails(label,cat){
 function taskDone(x){return x[3]==='done'||localStorage.getItem('japan-cal-'+x[0]+'-'+x[1])==='1'}
 function renderBookingByDate(){
  const order=['transport','activities','flights','trains','ski','hotels','insurance','people','bookings','days'];
- const isReply=x=>/follow up|follow-up|await|reply|response|unanswered|check.*reply|email.*response/i.test(x[1]);
- const sorted=[...CAL_EVENTS].filter(x=>x[3]!=='travel'&&x[3]!=='deadline'&&!isReply(x)).sort((a,b)=>a[0].localeCompare(b[0])||order.indexOf(a[2])-order.indexOf(b[2]));
+ const sorted=[...CAL_EVENTS].filter(x=>x[3]!=='travel'&&x[3]!=='deadline').sort((a,b)=>a[0].localeCompare(b[0])||order.indexOf(a[2])-order.indexOf(b[2]));
  const pending=sorted.filter(x=>!taskDone(x)),completed=sorted.filter(x=>taskDone(x));
  const task=x=>'<div class="cal-event" style="display:flex;align-items:center;gap:10px"><input type="checkbox" class="cal-task-check" data-date="'+escapeHtml(x[0])+'" data-label="'+escapeHtml(x[1])+'" '+(taskDone(x)?'checked':'')+' '+(x[3]==='done'?'disabled':'')+' aria-label="Mark task completed"><button type="button" class="task-detail-link" style="flex:1;text-align:left;background:none;border:0;cursor:pointer" data-cat="'+escapeHtml(x[2])+'" data-label="'+escapeHtml(x[1])+'">'+escapeHtml(x[1])+' ↗</button></div>';
  const dateTitle=date=>new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
  const days=[...new Set(pending.map(x=>x[0]))];
- let html='<div class="cal-intro"><h2>Tasks by date</h2><p>Check off tasks as you complete them. Routine email replies remain in the Calendar view.</p></div>';
+ let html='<div class="cal-intro"><h2>Tasks by date</h2><p>Check off tasks as you complete them. Email follow-ups are included.</p></div>';
  for(const date of days){html+='<section class="cal-agenda-day" style="padding:14px;margin-bottom:14px"><h3>'+dateTitle(date)+'</h3><div class="cal-agenda-body">'+pending.filter(x=>x[0]===date).map(task).join('')+'</div></section>';}
  if(completed.length){html+='<h2>Completed</h2>';for(const date of [...new Set(completed.map(x=>x[0]))])html+='<section class="cal-agenda-day" style="padding:14px;margin-bottom:14px"><h3>'+dateTitle(date)+'</h3><div class="cal-agenda-body">'+completed.filter(x=>x[0]===date).map(task).join('')+'</div></section>';}
  return html;
