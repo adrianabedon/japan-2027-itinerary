@@ -47,7 +47,7 @@ const CAL_EVENTS=[["2026-10-30","ANA flight paid","flights","done"],["2026-10-30
 function displayTaskWithTripContext(x){
  const label=x[1],t=label.toLowerCase();
  if(/follow up|follow-up|await|reply|response|unanswered|check.*reply|email.*response/i.test(label))return label;
- let day=null,city='';
+ let day=null;
  const m=label.match(/\bFeb(?:ruary)?\s+(\d{1,2})\b/i);
  if(m)day=Number(m[1]);
  else if(/fukumitsuya|sake tasting|tokyo.*kanazawa/.test(t))day=14;
@@ -55,19 +55,10 @@ function displayTaskWithTripContext(x){
  else if(/waraku|samurai/.test(t))day=18;
  else if(/fufu.*(haneda|hnd)|haneda.*fufu/.test(t))day=21;
  else if(/niseko|hirafu/.test(t))day=10;
- if(day===7)city='Sapporo / Rusutsu';
- else if(day>=8&&day<=11)city='Rusutsu / Niseko';
- else if(day===12)city='Sapporo → Tokyo';
- else if(day===13)city='Tokyo';
- else if(day===14)city='Tokyo → Kanazawa';
- else if(day===15)city='Kanazawa / Shirakawa-go';
- else if(day===16)city='Kanazawa → Kyoto';
- else if(day===17||day===18)city='Kyoto';
- else if(day===19)city='Kyoto → Hakone';
- else if(day===20)city='Hakone';
- else if(day===21)city='Hakone → Haneda';
- if(!city)return label;
- return 'DAY '+(day-6)+' · FEB '+day+' · '+city+' — '+label;
+ if(day===null)return label;
+ const heading=DATA.blocks.find(b=>b.type==='heading'&&new RegExp('^DAY \\d+ - \\w+ FEB '+day+'\\b','i').test(b.text));
+ if(!heading)return label;
+ return heading.text.replace(/\s*\|\s*/,' | ').replace(/\s{2,}/g,' ')+' — '+label;
 }
 function renderCalendar(){
  const monthPairs=[[2026,10],[2026,11],[2027,0],[2027,1]],wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
