@@ -114,12 +114,16 @@ function renderCalendar(){
  };
  const sortWithinGroup=(a,b)=>activityDate(a)-activityDate(b)||a[0].localeCompare(b[0])||a[1].localeCompare(b[1]);
  const renderGroups=(items,agenda=false)=>{
-   const pending=items.filter(x=>!taskDone(x));
-   const completed=items.filter(x=>taskDone(x));
+   const pending=items.filter(x=>x[3]!=='travel'&&x[3]!=='deadline'&&!taskDone(x));
+   const completed=items.filter(x=>x[3]!=='travel'&&x[3]!=='deadline'&&taskDone(x));
+   const deadlines=items.filter(x=>x[3]==='deadline');
+   const itinerary=items.filter(x=>x[3]==='travel');
    let tags=groupOrder.map(group=>{
      const entries=pending.filter(x=>groupName(x)===group).sort(sortWithinGroup);
      return entries.length?'<div class="cal-group-label">'+group+'</div>'+entries.map(makeEvent).join(''):'';
    }).join('');
+   if(deadlines.length)tags+='<div class="cal-group-label">Cancellation deadlines</div>'+deadlines.sort(sortWithinGroup).map(makeEvent).join('');
+   if(itinerary.length)tags+='<div class="cal-group-label">Scheduled itinerary (not to-dos)</div>'+itinerary.sort(sortWithinGroup).map(makeEvent).join('');
    if(completed.length)tags+='<div class="cal-done-label">Completed</div>'+completed.sort(sortWithinGroup).map(makeEvent).join('');
    return tags;
  };
@@ -127,8 +131,11 @@ function renderCalendar(){
  const agenda=actionDates.map((date,i)=>{
    const items=EVENTS.filter(x=>x[0]===date);
    const label=new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-   const pending=items.filter(x=>!taskDone(x)).length;
-   return '<details id="agenda-'+date+'" class="cal-agenda-day"'+(i<2?' open':'')+'><summary>'+escapeHtml(label)+' <span class="cal-task-count">'+pending+' to do</span></summary><div class="cal-agenda-body">'+renderGroups(items,true)+'</div></details>';
+   const pending=items.filter(x=>x[3]!=='travel'&&x[3]!=='deadline'&&!taskDone(x)).length;
+   const deadlines=items.filter(x=>x[3]==='deadline').length;
+   const itinerary=items.filter(x=>x[3]==='travel').length;
+   const summary=pending?pending+' to do':deadlines?deadlines+' deadline'+(deadlines===1?'':'s'):itinerary?'Itinerary':'Completed';
+   return '<details id="agenda-'+date+'" class="cal-agenda-day"'+(i<2?' open':'')+'><summary>'+escapeHtml(label)+' <span class="cal-task-count">'+summary+'</span></summary><div class="cal-agenda-body">'+renderGroups(items,true)+'</div></details>';
  }).join('');
  let months=monthPairs.map(([y,m])=>{
   let last=new Date(y,m+1,0).getDate(),start=new Date(y,m,1).getDay();
@@ -138,13 +145,17 @@ function renderCalendar(){
     let items=valid?EVENTS.filter(x=>x[0]===date):[];
     let style=items.some(x=>x[3]==='deadline')?' deadline':items.some(x=>x[3]==='travel')?' travel':items.length?' action':'';
     let tags=renderGroups(items);
-    let todo=items.filter(x=>!taskDone(x)).length,done=items.filter(x=>taskDone(x)).length;
-    let compact=valid&&items.length?'<a class="cal-cell-compact" href="#agenda-'+date+'">'+(todo?todo+' to do':done+' done')+'</a>':'';
+    let todo=items.filter(x=>x[3]!=='travel'&&x[3]!=='deadline'&&!taskDone(x)).length;
+    let deadlines=items.filter(x=>x[3]==='deadline').length;
+    let done=items.filter(x=>x[3]!=='travel'&&x[3]!=='deadline'&&taskDone(x)).length;
+    let travel=items.filter(x=>x[3]==='travel').length;
+    let countLabel=[todo?todo+' to do':'',deadlines?deadlines+' deadline'+(deadlines===1?'':'s'):'',!todo&&!deadlines&&travel?'Itinerary':'',!todo&&!deadlines&&!travel&&done?done+' done':''].filter(Boolean).join(' · ');
+    let compact=valid&&items.length?'<a class="cal-cell-compact" href="#agenda-'+date+'">'+countLabel+'</a>':'';
     cells+='<div class="cal-cell'+style+'">'+(valid?'<a class="cal-day-link" href="'+(items.length?'#agenda-'+date:'#calendar-top')+'"><span class="cal-day">'+n+'</span></a>'+compact:'')+'</div>';
   }
   return '<section class="cal-month"><h3>'+new Date(y,m,1).toLocaleString('en-US',{month:'long',year:'numeric'})+'</h3><div class="cal-grid">'+cells+'</div></section>';
  }).join('');
- return '<div class="cal-intro" id="calendar-top"><h2>Booking & follow-up calendar</h2><p><strong>Rolling task list: FUFU Hakone and WorldTrips are awaiting replies. Fuji Taxi is confirmed and completed. No automatic follow-up email is sent.</strong></p><p>Select a date in the visual calendar to jump directly to that day’s tasks. Unfinished tasks, including unanswered inquiries, automatically appear under today when their original date has passed; past dates are cleared of those open tasks. A task awaiting a reply is not an instruction to contact anyone each day: decide when to follow up after reviewing the elapsed time. Future scheduled tasks keep their dates, and completed tasks retain their original dates. Pending tasks are marked ■; completed tasks are marked ✓ and appear last.</p></div><div class="cal-months">'+months+'</div><p class="cal-legend">✓ Completed · Green: action · Gold: cancellation deadline · Blue: travel day. Dates are in Japan local time where applicable.</p><section class="cal-agenda"><h3>Daily tasks — select a calendar date above</h3>'+agenda+'</section>';
+ return '<div class="cal-intro" id="calendar-top"><h2>Booking & follow-up calendar</h2><p><strong>Rolling task list: FUFU Hakone and WorldTrips are awaiting replies. Fuji Taxi is confirmed and completed. No automatic follow-up email is sent.</strong></p><p>Select a date in the visual calendar to jump directly to that day’s tasks. Unfinished tasks, including unanswered inquiries, automatically appear under today when their original date has passed; past dates are cleared of those open tasks. A task awaiting a reply is not an instruction to contact anyone each day: decide when to follow up after reviewing the elapsed time. Future scheduled tasks keep their dates, and completed tasks retain their original dates. Pending action tasks are marked ■; travel activities are itinerary entries, not to-dos; cancellation deadlines are shown separately; completed tasks are marked ✓ and appear last.</p></div><div class="cal-months">'+months+'</div><p class="cal-legend">✓ Completed · Green: action · Gold: cancellation deadline · Blue: travel day. Dates are in Japan local time where applicable.</p><section class="cal-agenda"><h3>Daily tasks — select a calendar date above</h3>'+agenda+'</section>';
 }
 
 function openTaskDetails(label,cat){
