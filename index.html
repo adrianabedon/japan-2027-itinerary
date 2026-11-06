@@ -134,7 +134,7 @@ function renderCalendar(){
    const pending=items.filter(x=>x[3]!=='travel'&&x[3]!=='deadline'&&!taskDone(x)).length;
    const deadlines=items.filter(x=>x[3]==='deadline').length;
    const itinerary=items.filter(x=>x[3]==='travel').length;
-   const summary=pending?pending+' to do':deadlines?deadlines+' deadline'+(deadlines===1?'':'s'):itinerary?'Itinerary':'Completed';
+   const summary=pending?pending+' to do':deadlines?deadlines+' deadline'+(deadlines===1?'':'s'):'Completed';
    return '<details id="agenda-'+date+'" class="cal-agenda-day"'+(i<2?' open':'')+'><summary>'+escapeHtml(label)+' <span class="cal-task-count">'+summary+'</span></summary><div class="cal-agenda-body">'+renderGroups(items,true)+'</div></details>';
  }).join('');
  let months=monthPairs.map(([y,m])=>{
@@ -149,8 +149,8 @@ function renderCalendar(){
     let deadlines=items.filter(x=>x[3]==='deadline').length;
     let done=items.filter(x=>x[3]!=='travel'&&x[3]!=='deadline'&&taskDone(x)).length;
     let travel=items.filter(x=>x[3]==='travel').length;
-    let countLabel=[todo?todo+' to do':'',deadlines?deadlines+' deadline'+(deadlines===1?'':'s'):'',!todo&&!deadlines&&travel?'Itinerary':'',!todo&&!deadlines&&!travel&&done?done+' done':''].filter(Boolean).join(' · ');
-    let compact=valid&&items.length?'<a class="cal-cell-compact" href="#agenda-'+date+'">'+countLabel+'</a>':'';
+    let countLabel=[todo?todo+' to do':'',deadlines?deadlines+' deadline'+(deadlines===1?'':'s'):'',!todo&&!deadlines&&done?done+' done':''].filter(Boolean).join(' · ');
+    let compact=valid&&countLabel?'<a class="cal-cell-compact" href="#agenda-'+date+'">'+countLabel+'</a>':'';
     cells+='<div class="cal-cell'+style+'">'+(valid?'<a class="cal-day-link" href="'+(items.length?'#agenda-'+date:'#calendar-top')+'"><span class="cal-day">'+n+'</span></a>'+compact:'')+'</div>';
   }
   return '<section class="cal-month"><h3>'+new Date(y,m,1).toLocaleString('en-US',{month:'long',year:'numeric'})+'</h3><div class="cal-grid">'+cells+'</div></section>';
